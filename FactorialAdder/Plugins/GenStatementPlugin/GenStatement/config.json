@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "description": "Generate a statement that uses the provided number in that statement",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 70,
+      "temperature": 0.9,
+      "top_p": 0.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "number",
+      "description": "The number to be used in the statement",
+      "default": "",
+      "is_required": true
+    }
+  ]
+}
