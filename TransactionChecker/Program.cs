@@ -7,8 +7,8 @@ using TransactionChecker;
 using TransactionChecker.Plugins;
 
 Console.Write("Enter a request: ");
-string requestString = Console.ReadLine() ?? string.Empty;
-//var requestString = "How much did I spend on Fitness in June 2024?";
+var requestString = Console.ReadLine() ?? string.Empty;
+//var requestString = "How much did I spend on Groceries last month?";
 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Config>()
@@ -16,8 +16,9 @@ var config = new ConfigurationBuilder()
 
 var builder = Kernel.CreateBuilder();
 builder.Services.AddSingleton<IConfiguration>(config);
-
 builder.Plugins.AddFromType<CosmosPlugin>();
+builder.Plugins.AddFromType<DatePlugin>();
+//builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "RequestResolverPlugin"));
 builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));
 builder.AddAzureOpenAIChatCompletion(
     deploymentName: "gpt-4o-gs-deployment",

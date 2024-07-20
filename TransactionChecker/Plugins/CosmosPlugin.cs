@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Linq;
-using System.Net;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
-using Microsoft.VisualBasic;
 
 namespace TransactionChecker.Plugins
 {
@@ -26,9 +18,11 @@ namespace TransactionChecker.Plugins
         [Description("Get sum of amount for transactions by category for a date range")]
         public async Task<decimal> ByCategoryInDateRange(
             [Description("The category to filter by")]string category,
-            [Description("The start date of the date range")]string startDate,
-            [Description("The end date of the date range")]string endDate)
+            [Description("The target month year to query by")]string targetMonthYear)
         {
+            var startDate = DateTime.Parse(targetMonthYear);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
             var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
             var database = cosmosClient.GetDatabase("transactions");
             var container = database.GetContainer("byCategory");
@@ -52,9 +46,11 @@ namespace TransactionChecker.Plugins
         [Description("Get sum of amount for transactions by category for a date range")]
         public async Task<decimal> ByMerchantInDateRange(
             [Description("The merchant to filter by")]string merchant,
-            [Description("The start date of the date range")]string startDate,
-            [Description("The end date of the date range")]string endDate)
+            [Description("The target month year to query by")]string targetMonthYear)
         {
+            var startDate = DateTime.Parse(targetMonthYear);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+            
             var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
             var database = cosmosClient.GetDatabase("transactions");
             var container = database.GetContainer("byCategory");
