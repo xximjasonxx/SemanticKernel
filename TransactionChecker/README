@@ -11,6 +11,9 @@ We will perform the following steps to execute this lab:
 
 Having the data is Cosmos reflects the concept of customer data being in a private datastore be it SQL, Data Lake, Redis, or some other system.
 
+## Technical Notes/Warnings
+For simplicity this lab leverages Account Keys for both Storage Account and Cosmos. While appropriate for this directed lab, managed identities should be used for *Production* scenarios as a safeguard against storing sensitive data.
+
 ## Prequisites
 Prior to beginning development, your Azure subscription should have a Azure OpenAI instance deployed with a generative model deployed
 
@@ -31,6 +34,11 @@ Instructions: [https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstar
 - **Capacity**: Serverless
 
 As this lab is not intended for *Production* use, it is advised you disable redundancy and replication options.
+
+Create a **database** and **collection**. Specify the **Partition key** as **/Category**
+![Create the Cosmos data store elements](./readme_images/cosmos-screen1.png)
+
+Naming of Cosmos databse and collection are flexible. The above is not a recommendation for naming or partitioning strategy.
 
 ### Create the Data Factory Instance (Optional)
 Instructions: [https://learn.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory](https://learn.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory)
@@ -55,8 +63,61 @@ The file will be accessed via an Access Key provided to Azure Data Factory. Do *
 6. Drag **Copy data** to the authoring space
 ![Authoring space with Copy Data task](./readme_images/datafactory-screen2.png)
 
-We will now configure this task to handle the movement of data to Cosmos
-7. Select the **Source** tab from the lower section
-8. Click **+ New** for **Source dataset**
-9. Select the **Azure** tab from the right flyout menud and then pick **Azure Blob Storage**
+### Setup the Source Configuration
+1. Select the **Source** tab from the lower section
+2. Click **+ New** for **Source dataset**
+3. Select the **Azure** tab from the right flyout menud and then pick **Azure Blob Storage** press **Continue**
 ![Select Azure Blob Storage as the source for our data](./readme_images/datafactory-screen3.png)
+
+4. Choose the format - pick **Excel** and press **Continue**
+5. From the **Linked service** select **+ New**
+6. Fill in the details for the Storage Account which holds the Excel file - press **Create**
+![Configure the Storage Account source](./readme_images/datafactory-screen4.png)
+
+7. Use the **Browse file...** feature to select the Excel file from Blob Storage
+8. Make sure **First row as header** is checked and select **Sheet1**.
+![Fill in the properties for the Source dataset](./readme_images/datafactory-screen5.png)
+9. Press **Ok**
+![The source configured](./readme_images/datafactory-screen6.png)
+
+### Setup the Destination Configuration
+1. Select the **Sink** tab from the lower section
+2. Click **+ New** for **Sink dataset**
+3. Select **Azure Cosmos DB for NoSQL** and click **Continue**.  
+![Select Cosmos as the destination](./readme_images/datafactory-screen7.png)
+
+4. From the **Linked service** select **+ New**
+5. Fill in the details for the Cosmos database created earlier - press **Create**
+6. Select the **Container/Collection** to target - press **Ok**.  
+![Set Properties for Cosmos connection](./readme_images/datafactory-screen8.png)
+7. Ensure the **Write behavior** (beneath **Sink dataset**) is set to **Upsert**
+
+### Configure the Mapping
+1. Select **Mapping** tab from the lower section
+2. Click **Import schemas**
+3. Configure the mapping as shown below:
+![The final mappings](./readme_images/datafactory-screen9.png)
+**Note:** Past *Date* no mapping is being done, this is intentional
+
+### Trigger a Pipeline Run
+1. From the upper bar select **Add trigger**
+2. Select **Trigger now**
+This will cause the the factory to run.
+
+3. Once complete validate the data in Cosmos using **Data explorer**
+4. If satisfied, click **Publish all** at the top to persist changes
+5. Close **Data Factory Studio**
+
+## Create the Query Program
+Prior to writing this code you must have the following information readily available:
+- The name of a GPT deployment in Azure OpenAI
+- The Endpoint and Key for the Azure OpenAI service you will be using
+
+### What is Semantic Kernel?
+Prompt-engineering is the discipline of understanding how to talk to LLMs (Large Language Models) that GenAI is built on. In theory, the better the prompt the better the information returned. While this is true, complex (or multi-step) AI applications quickly make simple propmt engineering overburdened. Semantic Kernel, and other frameworks like it, introduce an *Agent-based* approach.
+
+The idea of using *agents* is that each agent can be specialized or *grounded* a certain way that helps it perform a specific role in achieving a goal. Our lab will create a Cosmos agent that perform queries based on the given request. Semantic Kernel will use the referenced GPT model to *understand* what the various pieces in the code base *do* and pull them together to solve the problem.
+
+### Create the application
+We will create a Console application for simplicity. The Console application will start up, ask the user to provide a request, and then return a response.
+1. Execute `dotnet new console --output QueryTransactions`
