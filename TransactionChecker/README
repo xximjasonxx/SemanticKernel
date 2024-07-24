@@ -1,0 +1,24 @@
+# Transaction Query Lab
+
+## Purpose
+This lab guides you through a representation of a common AI-related business scenario which involves performing prompt-based queries against a custom dataset. In this case, an Excel file is provided which contains a list of transactions ranging from 11/14/2021 to 7/9/2024, approximately 2800 items. The lab then shows how to construct a code base to support RAG (Retrieval Augmented Generation) queries to query this custom dataset.
+
+## Our Process
+We will perform the following steps to execute this lab:
+1. Store the Transactions Excel file is a readable location
+2. Use an ETF process to move the data into a datastore, Cosmos for this lab
+3. Implement a console application with C# to perform queries against our data
+
+Having the data is Cosmos reflects the concept of customer data being in a private datastore be it SQL, Data Lake, Redis, or some other system.
+
+## Prequisites
+Prior to beginning development, your Azure subscription should have a Azure OpenAI instance deployed with a generative model deployed
+
+Instructions: [https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
+
+Have .NET 8 installed on your development machine.
+
+Download .NET 8: [https://dotnet.microsoft.com/en-us/download/dotnet/8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+
+Have a code editor installed. For this demo, screenshots and references will be using VSCode. But this lab does not have an IDE-specific requirement
+
