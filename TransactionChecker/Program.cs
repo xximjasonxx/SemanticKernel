@@ -21,8 +21,8 @@ builder.Plugins.AddFromType<CosmosPlugin>();
 builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));
 builder.AddAzureOpenAIChatCompletion(
     deploymentName: "gpt-4o-gs-deployment",
-    endpoint: "https://openai-rag-demo-eus-jx01.openai.azure.com/",
-    apiKey: "16def0ad13874d08a991fe9bfb0bcb1f");
+    endpoint: config["OpenAIEndpoint"],
+    apiKey: config["OpenAIApiKey"]);
 
 var kernel = builder.Build();
 
