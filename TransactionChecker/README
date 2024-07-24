@@ -22,3 +22,41 @@ Download .NET 8: [https://dotnet.microsoft.com/en-us/download/dotnet/8.0](https:
 
 Have a code editor installed. For this demo, screenshots and references will be using VSCode. But this lab does not have an IDE-specific requirement
 
+## Preparation
+The first goal is to get the data into Cosmos. There are a number of ways to do this but we will use Azure Data Factory to perform the ETL operation. As it is not unlikely that the data you may be working with is significantly larger than this dataset, having skills around ETL are beneficial.
+
+### Create the Cosmos Instance
+Instructions: [https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal)
+- **API**: NoSQL
+- **Capacity**: Serverless
+
+As this lab is not intended for *Production* use, it is advised you disable redundancy and replication options.
+
+### Create the Data Factory Instance (Optional)
+Instructions: [https://learn.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory](https://learn.microsoft.com/en-us/azure/data-factory/quickstart-create-data-factory)
+The Data Factory will be used to move our data from the Excel file into CosmosDB. This is **NOT** required as you could use a Console script or something else to move the data. We are using it here as it closely follows the business use case we are representing.
+
+## Move the Data
+### Create a Storage Account and Upload the Excel file
+1. Create a Storage Account ([here](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal))
+2. Create a container
+3. Upload the **transactions.xlsx** file to the container - [instructions](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal)
+
+The file will be accessed via an Access Key provided to Azure Data Factory. Do **NOT** enable public access
+
+### Create a Pipeline to Copy the Data
+1. Access your Azure Data Factory instance - select **Launch Studio**
+2. Ensure the **Author** button is selected in the left hand navigation
+3. From **Pipelines**, click the **...** and select the **New Pipeline** option
+![Select New Pipeline from the Pipelines menu](./readme_images/datafactory-screen1.png)
+
+4. On the far right, provide a name for the pipeline. In our example I will use **MyPipeline** for the name
+5. Expand the **Move and transform** category
+6. Drag **Copy data** to the authoring space
+![Authoring space with Copy Data task](./readme_images/datafactory-screen2.png)
+
+We will now configure this task to handle the movement of data to Cosmos
+7. Select the **Source** tab from the lower section
+8. Click **+ New** for **Source dataset**
+9. Select the **Azure** tab from the right flyout menud and then pick **Azure Blob Storage**
+![Select Azure Blob Storage as the source for our data](./readme_images/datafactory-screen3.png)
