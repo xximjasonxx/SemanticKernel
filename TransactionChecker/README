@@ -121,3 +121,127 @@ The idea of using *agents* is that each agent can be specialized or *grounded* a
 ### Create the application
 We will create a Console application for simplicity. The Console application will start up, ask the user to provide a request, and then return a response.
 1. Execute `dotnet new console --output QueryTransactions`
+2. Add the NuGet packages
+    - `dotnet add package Microsoft.SemanticKernel`
+    - `dotnet add package Microsoft.SemanticKernel.Planners.Handlebars --version 1.16.1-preview`
+    - `dotnet add package Microsoft.Extensions.Configuration.UserSecrets`
+    - `dotnet add package Microsoft.Azure.Cosmos`
+ 
+3. Initialize .NET Secrets Manager - `dotnet user-secrets init`
+4. Add Sensitive data to the Secret Manager
+   - `dotnet user-secrets set OpenAIEndpoint "SOME_ENDPOINT"`
+   - `dotnet user-secrets set OpenAIApiKey "SOME_KEY"`
+   - `dotnet user-secrets set CosmosConnectionString "SOME_CONNECTION_STRING"`
+
+6. In the **Program.cs** file paste the following code:
+```
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Planning.Handlebars;
+using TransactionChecker;
+using TransactionChecker.Plugins;
+
+Console.Write("Enter a request: ");
+var requestString = Console.ReadLine() ?? string.Empty;
+
+var config = new ConfigurationBuilder()
+    .AddUserSecrets<Config>()
+    .Build();
+
+var builder = Kernel.CreateBuilder();
+builder.Services.AddSingleton<IConfiguration>(config);
+builder.AddAzureOpenAIChatCompletion(
+    deploymentName: "gpt-4o-gs-deployment",
+    endpoint: config["OpenAIEndpoint"],
+    apiKey: config["OpenAIApiKey"]);
+
+var kernel = builder.Build();
+
+#pragma warning disable // Suppress the diagnostic messages
+var planner = new HandlebarsPlanner(
+    new HandlebarsPlannerOptions() { AllowLoops = true });
+
+var plan = await planner.CreatePlanAsync(kernel, requestString);
+var planResult = await plan.InvokeAsync(kernel, new KernelArguments());
+
+Console.WriteLine(planResult);
+```
+Running this code will not produce the results we want, that is because we have added no intelligence to the application.
+
+### Add the Cosmos Plugin
+Plugins in Semantic Kernel and the blocks that *do things*. The **Cosmos Plugin** is an example of a *code-based* plugin. That is a plugin that exposes methods written in a supported language (C# in this case) that carries out tasks.
+
+1. Create a folder called **Plugins**
+  - This is not necessarily required by follows the convention suggested by Semantic Kernel documentation
+
+2. Create a class **CosmosPlugin** in this folder
+3. Paste the following code into this class
+```
+public sealed class CosmosPlugin
+{
+    private readonly IConfiguration _configuration;
+    public CosmosPlugin(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+    [KernelFunction("byCategoryInDateRange")]
+    [Description("Get sum of amount for transactions by category for a date range")]
+    public async Task<decimal> ByCategoryInDateRange(
+        [Description("The category to filter by")]string category,
+        [Description("The start date of the date range")]string startDate,
+        [Description("The end date of the date range")]string endDate)
+    {
+        var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
+        var database = cosmosClient.GetDatabase("transactions");
+        var container = database.GetContainer("byCategory");
+        var query = new QueryDefinition("SELECT VALUE SUM(c.Amount) FROM c WHERE c.Category = @category AND c.Date >= @startDate AND c.Date <= @endDate")
+            .WithParameter("@category", category)
+            .WithParameter("@startDate", startDate)
+            .WithParameter("@endDate", endDate);
+        var queryIterator = container.GetItemQueryIterator<decimal>(query);
+        if (queryIterator.HasMoreResults)
+        {
+            var response = await queryIterator.ReadNextAsync();
+            return Math.Abs(response.Resource.First());
+        }
+
+        return decimal.Zero;
+    }
+}
+```
+
+Notice the use of the **Description** attribute throughout this code. This is important as it allows Semantic Kernel to use the associated GPT reference to understand what the method does and what is expected for each parameter. This allows the **Planner** to understand how to call the method.
+
+Here the method expects to be given a **category**, **start date**, and **end date**. It will then use these values to query Cosmos. All in all this is very common code for applications performing queries against a Cosmos database. In a production application we would want to better handle the *connection* but, beyond that you would find code like this for Cosmos backed applications.
+
+4. Finally we have to update **Program.cs** to inform Semantic Kernel the **CosmosPlugin** can be used. We do that by update our Kernel configuration to this:
+```
+var config = new ConfigurationBuilder()
+    .AddUserSecrets<Config>()
+    .Build();
+
+var builder = Kernel.CreateBuilder();
+builder.Services.AddSingleton<IConfiguration>(config);
+
+builder.Plugins.AddFromType<CosmosPlugin>();
+builder.AddAzureOpenAIChatCompletion(
+    deploymentName: "gpt-4o-gs-deployment",
+    endpoint: config["OpenAIEndpoint"],
+    apiKey: config["OpenAIApiKey"]);
+```
+
+We added the call to `builder.Plugins.AddFromType<CosmosPlugin>();` which makes the Kernel aware of the plugin. And it will understand what it does and what it needs using the **Description** attribute values.
+
+Let's run the program again, this time provide the request string: `How much was spent on Groceries in May 2024?`
+This should produce the result: `1333.1599999999996`
+
+Ok so this is really cool. If you debug the program you will find that **ByCategoryInDateRange** method is being called with the following:
+ - category = 'Groceries'
+ - startDate = 2024-05-01
+ - endDate = 2024-05-31
+
+ That is really cool. Using the GPT model, Semantic Kernel was able to deduce bits of information from the request and pass the appropriate parameter values. It used the **Description** values to determine what it needed.
+
+ ### Format the Output
+ So we are successfully querying Cosmos with the data from the request string. But, the output leaves a lot to be desired.
