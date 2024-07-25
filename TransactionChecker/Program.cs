@@ -7,7 +7,7 @@ using TransactionChecker;
 using TransactionChecker.Plugins;
 
 Console.Write("Enter a request: ");
-string requestString = Console.ReadLine() ?? string.Empty;
+var requestString = Console.ReadLine() ?? string.Empty;
 //var requestString = "How much did I spend on Fitness in June 2024?";
 
 var config = new ConfigurationBuilder()

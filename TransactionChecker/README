@@ -244,4 +244,85 @@ Ok so this is really cool. If you debug the program you will find that **ByCateg
  That is really cool. Using the GPT model, Semantic Kernel was able to deduce bits of information from the request and pass the appropriate parameter values. It used the **Description** values to determine what it needed.
 
  ### Format the Output
- So we are successfully querying Cosmos with the data from the request string. But, the output leaves a lot to be desired.
+ So we are successfully querying Cosmos with the data from the request string. But, the output leaves a lot to be desired. What would be better is if our result was something like: `You spent $1333.16 on Groceries in May 2024".
+
+ To do this, we can use a **Prompt-plugin** to ask GPT to reformat the string. **Prompt-pluigins** differ from *code plugins* because they dont feature code, instead specific files are included which control how a given prompt is sent to the GPT client.
+
+ 1. Create a new folder under the **Plugins** directory called **FormatterPlugin** or whatever name you decide
+ 2. For a given *function* in this plugin we create another folder. Create **FormatCategoryRequestOutput**
+
+ 3. We need to include two specific files here: **config.json** and **skprompt.txt**
+ **config.json** controls the parameters used to call the GPT client. Use these contents for our application:
+ ```
+ {
+  "schema": 1,
+  "description": "Given a by category request for a time range, format the resulting monetary value",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 70,
+      "temperature": 0.9,
+      "top_p": 0.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "number",
+      "description": "The value returned from to format",
+      "default": "",
+      "is_required": true
+    },
+    {
+      "name": "category",
+      "description": "The category for which the monetary value was requested",
+      "default": "",
+      "is_required": true
+    },
+    {
+      "name": "time_period",
+      "description": "The time period for which the monetary value was requested",
+      "default": "",
+      "is_required": true
+    }
+  ]
+}
+```
+Once again, a *description* is provided which allows Semantic Kernel to understand what the plugin function does. Also, we specify *input_variables* as what variables we may want to pass to the plugin to be used in the prompt. Here we the **number** to format and the **category** and **time_period** to filter by. Each of these parameters has a description to allow Semantic Kernel to understand what they are.
+
+**skprompt.txt** represents the template prompt to be used when calling GPT. This leverages *Prompt-engineering* concepts to indicate to the GPT client what it is being asked to do. Handlebar syntax can be used to reference the input variables specified in **config.json**. Use this for our example:
+```
+THE NUMBER {{ $number }} REPRESENTS THE SUM TOTAL FOR ALL TRANSACTIONS SPENT IN THE {{ $category}} CATEGORY
+RETURN A STATEMENT THAT INCLUDES THE NUMBER {{ $number }} AND THE CATEGORY {{ $category }} AND TIME PERIOND {{ $time_period }} IN A FORMAT LIKE THIS EXAMPLE:
+You spent $56 on Groceries in June 2024
+```
+
+My advice is to be very overt when constructing the prompt and include examples of what is being asked so GPT can better understand what kind of output you want.
+
+Both of these files should be stored under the **FormatCategoryRequestOutput** folder:  
+![Plugin files shown in VSCode](./readme_images/vscode-screen1.png)
+
+4. Next we need to update **Program.cs** to include the Prompt-plugin. Below is the updated section. The call is quite different than what is done with *code-based* plugins.
+```
+var config = new ConfigurationBuilder()
+    .AddUserSecrets<Config>()
+    .Build();
+
+var builder = Kernel.CreateBuilder();
+builder.Services.AddSingleton<IConfiguration>(config);
+
+builder.Plugins.AddFromType<CosmosPlugin>();
+builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));
+builder.AddAzureOpenAIChatCompletion(
+    deploymentName: "gpt-4o-gs-deployment",
+    endpoint: config["OpenAIEndpoint"],
+    apiKey: config["OpenAIApiKey"]);
+
+var kernel = builder.Build();
+```
+
+We added `builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));` and target the **PLUGIN** directory, not the function directory.
+
+5. Run the application again with the request `How much was spent on Groceries in May 2024?`. My result is: `You spent $1333.16 on Groceries in May 2024.`
+
+Much nicer. Our application works well and should handle more premutations. But how well does it handle some shortcuts in natural language. For example, what if I ask `How much was spent on Groceries last month?` I get an error, lets fix that.
