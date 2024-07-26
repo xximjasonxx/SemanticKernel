@@ -8,7 +8,7 @@ using TransactionChecker.Plugins;
 
 Console.Write("Enter a request: ");
 var requestString = Console.ReadLine() ?? string.Empty;
-//var requestString = "How much did I spend on Groceries last month?";
+//var requestString = "How much did I spend on Fitness in June 2024?";
 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Config>()
