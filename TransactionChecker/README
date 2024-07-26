@@ -326,3 +326,34 @@ We added `builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurre
 5. Run the application again with the request `How much was spent on Groceries in May 2024?`. My result is: `You spent $1333.16 on Groceries in May 2024.`
 
 Much nicer. Our application works well and should handle more premutations. But how well does it handle some shortcuts in natural language. For example, what if I ask `How much was spent on Groceries last month?` I get an error, lets fix that.
+
+### The DatePlugin
+Semantic Kernel uses the **Description** of functions and parameters to intelligently call the plugins to achieve the result. Now GPT is smart enough to understand what *last month* means but, we want to control the format that gets passed. While it is possible to do this with a Prompt-based plugin, it is simpler to use code. Here is what our **DatePlugin** looks like:
+```
+public class DatePlugin
+{
+    [KernelFunction("GetLastYear")]
+    [Description("Get the last month")]
+    public string GetLastMonth()
+    {
+        var dt = DateTime.Now.AddMonths(-1);
+        return dt.ToString("MMMM yyyy");
+    }
+}
+```
+
+Now the nice thing is, GPT is smart enough to understand the various English permutations of *last month* such as *previous month* or *prior month* so giving the **Description** of *Get the last month* is enough for Semantic Kernel to call it when we solicit it for the previous month.
+
+We then add it to our kernel instance with the following line:
+`builder.Plugins.AddFromType<DatePlugin>();`
+
+This effecively *teaches* our application (through Semantic Kernel) what we expect when this request is made. Semantic Kernel is using GPT to *understand* what we want and making it happen via the **Planner**.
+
+As of this writing it is currently July 2024, so making the request:
+`How much did I spend on Groceries last month?` produces
+![Shortcut requests](./readme_images/vscode-screen2.png)
+
+## Summary
+AI-agents using tools like Semantic Kernel are important as we craft the next generation of AI applications, applications that not only utilize services like ChatGPT but also need to augment those results with private data. In this example, that private data was stored in Cosmos. Semantic Kernel being able to understand the nature of the request and pass appropriate parameters to components of the operation in service of the goal of the request.
+
+While the example here was small and simple it does show case how we can use components to pull together a final result.

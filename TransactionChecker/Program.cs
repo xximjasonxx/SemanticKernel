@@ -18,7 +18,6 @@ var builder = Kernel.CreateBuilder();
 builder.Services.AddSingleton<IConfiguration>(config);
 builder.Plugins.AddFromType<CosmosPlugin>();
 builder.Plugins.AddFromType<DatePlugin>();
-//builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "RequestResolverPlugin"));
 builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));
 builder.AddAzureOpenAIChatCompletion(
     deploymentName: "gpt-4o-gs-deployment",
