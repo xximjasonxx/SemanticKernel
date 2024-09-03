@@ -34,3 +34,5 @@ Example:
 When formatting the response, follow these rules:
 - If the request is for the amount spent at a merchant over a time range where the dates do not encompass the first and last day of the same or a different month, respond with:
   - "You spent {{ $sum_total }} at {{ $filter_item }} from {{ $start_date }} to {{ $end_date }}"
+- If the request is for the amount spent at a merchant over a time range where the dates represent the first and last day of that month, respond with:
+  - "You spent {{ $sum_total }} at {{ $filter_item }} for the month of {{ month }} {{ year }}"

@@ -5,6 +5,27 @@ namespace TransactionChecker.Plugins
 {
     public class DatePlugin
     {
+        [KernelFunction, Description("Get the start date of a date string in the format MMMM yyyy")]
+        public string GetStartDateForMonthYearString([Description("The date in string format")]string dateString)
+        {
+            var dt = DateTime.Parse(dateString);
+            return dt.ToString("yyyy-MM-01");
+        }
+
+        [KernelFunction, Description("Get the end date of a date string in the format MMMM yyyy")]
+        public string GetEndDateForMonthYearString([Description("The date in string format")]string dateString)
+        {
+            var dt = DateTime.Parse(dateString);
+            var lastDay = DateTime.DaysInMonth(dt.Year, dt.Month);
+            return dt.ToString($"yyyy-MM-{lastDay}");
+        }
+
+
+
+
+
+
+
         /*[KernelFunction("GetLastMonth")]
         [Description("Get the last month")]
         public string GetLastMonth()
@@ -37,13 +58,13 @@ namespace TransactionChecker.Plugins
                 dt = dt.AddYears(-1);
 
             return dt.ToString("MMMM yyyy");
-        }*/
+        }
 
         [KernelFunction("GetDateTime")]
         [Description("Convert a date in string format and to a DateTime")]
         public DateTime GetDateTime([Description("The date in string format")]string date)
         {
             return DateTime.Parse(date);
-        }
+        }*/
     }
 }
