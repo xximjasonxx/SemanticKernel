@@ -19,8 +19,8 @@ namespace TransactionChecker.Plugins
         [Description("Get transactions for a merchant in a date range")]
         public async Task<List<Transaction>> TransactionsByMerchantInDateRange(
             [Description("The merchant to filter by")] string merchant,
-            [Description("The start date for the transaction query")] DateTime startDate,
-            [Description("The end date for the transaction query")] DateTime endDate)
+            [Description("The start date for the transaction query")] string startDate,
+            [Description("The end date for the transaction query")] string endDate)
         {
             var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
             var database = cosmosClient.GetDatabase("transactions");
