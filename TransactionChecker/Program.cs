@@ -6,10 +6,6 @@ using Microsoft.SemanticKernel.Planning.Handlebars;
 using TransactionChecker;
 using TransactionChecker.Plugins;
 
-Console.Write("Enter a request: ");
-var requestString = Console.ReadLine() ?? string.Empty;
-//var requestString = "How much did I spend on Fitness in June 2024?";
-
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Config>()
     .Build();
@@ -18,7 +14,8 @@ var builder = Kernel.CreateBuilder();
 builder.Services.AddSingleton<IConfiguration>(config);
 builder.Plugins.AddFromType<CosmosPlugin>();
 builder.Plugins.AddFromType<DatePlugin>();
-builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPlugin"));
+builder.Plugins.AddFromType<TransactionsPlugin>();
+builder.Plugins.AddFromPromptDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Plugins", "FormatterPluginV2"));
 builder.AddAzureOpenAIChatCompletion(
     deploymentName: "gpt-4o-gs-deployment",
     endpoint: config["OpenAIEndpoint"],
@@ -26,11 +23,21 @@ builder.AddAzureOpenAIChatCompletion(
 
 var kernel = builder.Build();
 
-#pragma warning disable // Suppress the diagnostic messages
-var planner = new HandlebarsPlanner(
-    new HandlebarsPlannerOptions() { AllowLoops = true });
+do
+{
+    Console.Write("Enter a request: ");
+    var requestString = Console.ReadLine() ?? string.Empty;
 
-var plan = await planner.CreatePlanAsync(kernel, requestString);
-var planResult = await plan.InvokeAsync(kernel, new KernelArguments());
+    #pragma warning disable // Suppress the diagnostic messages
+    var planner = new HandlebarsPlanner(
+        new HandlebarsPlannerOptions()
+        {
+            AllowLoops = false
+        });
 
-Console.WriteLine(planResult);
+    var plan = await planner.CreatePlanAsync(kernel, requestString);
+    var planResult = await plan.InvokeAsync(kernel, new KernelArguments());
+
+    Console.WriteLine(planResult);
+    Console.WriteLine();
+} while (true);

@@ -15,4 +15,13 @@
     <PackageReference Include="Microsoft.SemanticKernel.Planners.Handlebars" Version="1.15.1-preview" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Plugins\FormatterPluginV2\FormatTotalResponse\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Plugins\FormatterPluginV2\FormatTotalResponse\skprompt.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

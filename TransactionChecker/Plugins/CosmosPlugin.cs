@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
+using TransactionChecker.Models;
 
 namespace TransactionChecker.Plugins
 {
@@ -14,60 +15,32 @@ namespace TransactionChecker.Plugins
             _configuration = configuration;
         }
 
-        [KernelFunction("byCategoryInDateRange")]
-        [Description("Get sum of amount for transactions by category for a date range")]
-        public async Task<decimal> ByCategoryInDateRange(
-            [Description("The category to filter by")]string category,
-            [Description("The target month year to query by")]string targetMonthYear)
+        [KernelFunction("transactionsForMerchantInDateRange")]
+        [Description("Get transactions for a merchant in a date range")]
+        public async Task<List<Transaction>> TransactionsByMerchantInDateRange(
+            [Description("The merchant to filter by")] string merchant,
+            [Description("The start date for the transaction query")] DateTime startDate,
+            [Description("The end date for the transaction query")] DateTime endDate)
         {
-            var startDate = DateTime.Parse(targetMonthYear);
-            var endDate = startDate.AddMonths(1).AddDays(-1);
-
             var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
             var database = cosmosClient.GetDatabase("transactions");
             var container = database.GetContainer("byCategory");
 
-            var query = new QueryDefinition("SELECT VALUE SUM(c.Amount) FROM c WHERE c.Category = @category AND c.Date >= @startDate AND c.Date <= @endDate")
-                .WithParameter("@category", category)
+            var query = new QueryDefinition("SELECT * FROM c WHERE LOWER(c.Merchant) = @merchant AND c.Date >= @startDate AND c.Date <= @endDate")
+                .WithParameter("@merchant", merchant.ToLower())
                 .WithParameter("@startDate", startDate)
                 .WithParameter("@endDate", endDate);
 
-            var queryIterator = container.GetItemQueryIterator<decimal>(query);
-            if (queryIterator.HasMoreResults)
+            var queryIterator = container.GetItemQueryIterator<Transaction>(query);
+            var results = new List<Transaction>();
+
+            while (queryIterator.HasMoreResults)
             {
-                var response = await queryIterator.ReadNextAsync();
-                return Math.Abs(response.Resource.First());
+                FeedResponse<Transaction> response = await queryIterator.ReadNextAsync();
+                results.AddRange(response);
             }
 
-            return decimal.Zero;
-        }
-
-        [KernelFunction("byMerchantInDateRange")]
-        [Description("Get sum of amount for transactions by category for a date range")]
-        public async Task<decimal> ByMerchantInDateRange(
-            [Description("The merchant to filter by")]string merchant,
-            [Description("The target month year to query by")]string targetMonthYear)
-        {
-            var startDate = DateTime.Parse(targetMonthYear);
-            var endDate = startDate.AddMonths(1).AddDays(-1);
-            
-            var cosmosClient = new CosmosClient(_configuration["CosmosConnectionString"]);
-            var database = cosmosClient.GetDatabase("transactions");
-            var container = database.GetContainer("byCategory");
-
-            var query = new QueryDefinition("SELECT VALUE SUM(c.Amount) FROM c WHERE c.Merchant = @merchant AND c.Date >= @startDate AND c.Date <= @endDate")
-                .WithParameter("@merchant", merchant)
-                .WithParameter("@startDate", startDate)
-                .WithParameter("@endDate", endDate);
-
-            var queryIterator = container.GetItemQueryIterator<decimal>(query);
-            if (queryIterator.HasMoreResults)
-            {
-                var response = await queryIterator.ReadNextAsync();
-                return Math.Abs(response.Resource.First());
-            }
-
-            return decimal.Zero;
+            return results;
         }
     }
 }

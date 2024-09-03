@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "description": "Provide a formatted response for a request of how much was spent on a particular category or merchant with a given start and end",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 70,
+      "temperature": 0.0,
+      "top_p": 0.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "sum_total",
+      "description": "The value returned from to format",
+      "default": "",
+      "is_required": true
+    },
+    {
+      "name": "filter_item",
+      "description": "The merchant or category the transactions are filtered by",
+      "default": "",
+      "is_required": true
+    },
+    {
+      "name": "start_date",
+      "description": "The start of the time period for the transactions",
+      "default": "",
+      "is_required": true
+    },
+    {
+      "name": "end_date",
+      "description": "The end of the time period for the transactions",
+      "default": "",
+      "is_required": true
+    }
+  ]
+}
