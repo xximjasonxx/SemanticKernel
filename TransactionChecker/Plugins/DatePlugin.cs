@@ -21,5 +21,20 @@ namespace TransactionChecker.Plugins
             var lastDay = DateTime.DaysInMonth(dt.Year, dt.Month);
             return dt.ToString($"yyyy-MM-{lastDay}");
         }
+
+        [KernelFunction("GetMonthStringForMonthName")]
+        [Description("Convert a given month name to a string in the format MMMM yyyy representing the more recent occurrence of the give month")]
+        public string GetMonthStringForMonthName([Description("The month name to be converted")]string monthName)
+        {
+            var dateString = $"1 {monthName} {DateTime.Now.Year}";
+            var dt = DateTime.Parse(dateString);
+
+            if (dt > DateTime.Now)
+            {
+                dt = dt.AddYears(-1);
+            }
+
+            return dt.ToString("MMMM yyyy");
+        }
     }
 }

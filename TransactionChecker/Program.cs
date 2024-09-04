@@ -32,7 +32,7 @@ do
     var planner = new HandlebarsPlanner(
         new HandlebarsPlannerOptions()
         {
-            AllowLoops = false
+            AllowLoops = true
         });
 
     var plan = await planner.CreatePlanAsync(kernel, requestString);
