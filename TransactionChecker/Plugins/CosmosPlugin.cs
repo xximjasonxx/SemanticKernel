@@ -26,10 +26,14 @@ namespace TransactionChecker.Plugins
             var database = cosmosClient.GetDatabase("transactions");
             var container = database.GetContainer("byCategory");
 
-            var query = new QueryDefinition("SELECT * FROM c WHERE LOWER(c.Merchant) = @merchant AND c.Date >= @startDate AND c.Date <= @endDate")
-                .WithParameter("@merchant", merchant.ToLower())
-                .WithParameter("@startDate", startDate)
-                .WithParameter("@endDate", endDate);
+            var query = string.IsNullOrEmpty(merchant) == false
+                ? new QueryDefinition("SELECT * FROM c WHERE LOWER(c.Merchant) = @merchant AND c.Date >= @startDate AND c.Date <= @endDate")
+                    .WithParameter("@merchant", merchant.ToLower())
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate)
+                : new QueryDefinition("SELECT * FROM c WHERE c.Date >= @startDate AND c.Date <= @endDate")
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate);
 
             var queryIterator = container.GetItemQueryIterator<Transaction>(query);
             var results = new List<Transaction>();

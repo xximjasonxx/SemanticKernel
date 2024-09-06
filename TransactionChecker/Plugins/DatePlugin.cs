@@ -22,9 +22,9 @@ namespace TransactionChecker.Plugins
             return dt.ToString($"yyyy-MM-{lastDay}");
         }
 
-        [KernelFunction("GetMonthStringForMonthName")]
-        [Description("Convert a given month name to a string in the format MMMM yyyy representing the more recent occurrence of the give month")]
-        public string GetMonthStringForMonthName([Description("The month name to be converted")]string monthName)
+        [KernelFunction("GetStartDateForMonthName")]
+        [Description("Get start date for month name")]
+        public string GetStartDateForMonthName([Description("The month name to be converted")]string monthName)
         {
             var dateString = $"1 {monthName} {DateTime.Now.Year}";
             var dt = DateTime.Parse(dateString);
@@ -34,7 +34,22 @@ namespace TransactionChecker.Plugins
                 dt = dt.AddYears(-1);
             }
 
-            return dt.ToString("MMMM yyyy");
+            return dt.ToString("yyyy-MM-dd");
+        }
+
+        [KernelFunction("GetEndDateForMonthName")]
+        [Description("Get end date for month name")]
+        public string GetEndDateForMonthName([Description("The month name to be converted")] string monthName)
+        {
+            var dateString = $"1 {monthName} {DateTime.Now.Year}";
+            var dt = DateTime.Parse(dateString);
+
+            if (dt > DateTime.Now)
+            {
+                dt = dt.AddYears(-1);
+            }
+
+            return dt.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd");
         }
     }
 }

@@ -18,10 +18,10 @@ Examples:
 - 2020-01-01 should be formatted as 01/01/2020
 - 01/01/2020 should be formatted as 01/01/2020
 
-Convert {{ $sum_total }} to an American currency string with the dollar sign and 2 digits after the decimal point. Do not use commas
+Convert {{ $sum_total }} to an American currency string with the dollar sign and 2 digits after the decimal point.
 Examples:
-- Given 2700 the response should format to $2700.00
-- Given 2345.67 the response should format to $2345.67
+- Given 2700 the response should format to $2,700.00
+- Given 2345.67 the response should format to $2,345.67
 
 {{ $filter_item }} represents a category or merchant for the transaction. This value be formatted using Title Case rules
 Example:
@@ -35,8 +35,14 @@ When creating the reponse ensure the following rules are followed for how the da
 If the start date and end date represent a single month, display the time range as a string formatted as "month year"".
 - Example: Start Date is 01/01/2020 and End Date is 01/31/2020, the response should be January 2020
 
+Ff the start date and end date represent multiple months within the same year, display the time range as a string formatted as "month - month year"
+- Example: Start Date is 01/01/2020 and End Date is 03/31/2020, the response should be "from January - March 2020"
+
 If the start date and end represent a time range of an arbitrary number of days, display the time range as a string formatted as "start date - end date"
-- Example: Start Date is 05/17/2020 and End Date is -6/02/2020, the response should be 05/17/2020 - 06/02/2020
+- Example: Start Date is 05/17/2020 and End Date is -6/02/2020, the response should be "between 05/17/2020 and 06/02/2020""
+
+if the start date and end date represent the start and end of the same year, display the time range as a string formatted as "year"
+- Example: Start Date is 01/01/2020 and End Date is 12/31/2020, the response should be "in 2020"
 
 When creating the final response, use the following template:
 - For a request filtering transactions by merchant respond with:   "You spent {{ $sum_total }} <TIME RANGE> at {{ $filter_item }}"
