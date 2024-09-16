@@ -1,0 +1,27 @@
+﻿{
+  "schema": 1,
+  "description": "Determine the start and end date for a given request",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 70,
+      "temperature": 0.0,
+      "top_p": 0.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "chat_history",
+      "description": "a collection of requests set previously by the user to the request engine",
+      "default": [],
+      "is_required": true
+    },
+    {
+      "name": "request_string",
+      "description": "the request string requested by the user",
+      "default": "",
+      "is_required": true
+    }
+  ]
+}

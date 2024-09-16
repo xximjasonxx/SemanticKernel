@@ -45,5 +45,7 @@ if the start date and end date represent the start and end of the same year, dis
 - Example: Start Date is 01/01/2020 and End Date is 12/31/2020, the response should be "in 2020"
 
 When creating the final response, use the following template:
-- For a request filtering transactions by merchant respond with:   "You spent {{ $sum_total }} <TIME RANGE> at {{ $filter_item }}"
-- For a request filtering transactions by category respond with:   "You spent {{ $sum_total }} <TIME RANGE> on {{ $filter_item }}"
+- For a request filtering transactions by merchant respond with:   You spent {{ $sum_total }} <TIME RANGE> at {{ $filter_item }}
+- For a request filtering transactions by category respond with:   You spent {{ $sum_total }} <TIME RANGE> on {{ $filter_item }}
+- For a request that does not have a category or merchant respond with:   You spent {{ $sum_total }} during <TIME RANGE>"
+  Example: "How much did I spend in July 2023?" should return "You spent $2,700.00 in July 2023"" assuming the sum of all transactions in July 2023 is $2,700.00

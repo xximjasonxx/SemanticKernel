@@ -51,5 +51,21 @@ namespace TransactionChecker.Plugins
 
             return dt.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd");
         }
+
+        [KernelFunction("GetStartDateForYear")]
+        [Description("Given a 4 digit year string return the first day of the year in string format")]
+        public string GetStartDateForYear([Description("The year to be converted")] string year)
+        {
+            var dt = DateTime.Parse($"1 January {year}");
+            return dt.ToString("yyyy-MM-dd");
+        }
+
+        [KernelFunction("GetEndDateForYear")]
+        [Description("Given a 4 digit year string return the last day of the year in string format")]
+        public string GetEndDateForYear([Description("The year to be converted")] string year)
+        {
+            var dt = DateTime.Parse($"31 December {year}");
+            return dt.ToString("yyyy-MM-dd");
+        }
     }
 }
